@@ -41,8 +41,7 @@ public class ProductService {
                 request.getName(),
                 request.getDescription(),
                 request.getPrice(),
-                request.getQuantity()
-        );
+                request.getQuantity());
         Product savedProduct = productRepository.save(product);
         return ProductResponse.fromEntity(savedProduct);
     }
