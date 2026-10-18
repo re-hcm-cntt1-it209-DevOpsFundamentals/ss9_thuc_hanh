@@ -128,13 +128,14 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           fingerprint: ${{ secrets.SERVER_FINGERPRINT }}
+          debug: true
           envs: IMAGE_NAME,IMAGE_TAG,GHCR_USERNAME,GHCR_READ_TOKEN
           script: |
             set -eu
 
             cd /opt/phat/docker-spring-lab
 
-            git pull --ff-only origin main
+            git pull --ff-only origin master
 
             printf '%s' "$GHCR_READ_TOKEN" |
               docker login ghcr.io \
