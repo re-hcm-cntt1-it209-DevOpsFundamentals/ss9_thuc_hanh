@@ -23,9 +23,9 @@ class HealthControllerTest {
     @DisplayName("GET /api/health - trả về trạng thái UP và phiên bản Java runtime")
     void shouldReturnHealthStatus() throws Exception {
         mockMvc.perform(get("/api/health")
-                        .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.status").value("UP 1"))
                 .andExpect(jsonPath("$.appName").value("docker-spring-lab"))
                 .andExpect(jsonPath("$.javaVersion").isNotEmpty())
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
