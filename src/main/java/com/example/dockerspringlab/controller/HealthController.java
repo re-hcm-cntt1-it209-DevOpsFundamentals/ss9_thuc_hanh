@@ -19,11 +19,10 @@ public class HealthController {
     @GetMapping
     public ResponseEntity<HealthResponse> checkHealth() {
         HealthResponse response = new HealthResponse(
-                "UP",
+                "UP 1",
                 appName,
                 System.getProperty("java.version"),
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
         return ResponseEntity.ok(response);
     }
 }
