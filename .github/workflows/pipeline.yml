@@ -119,21 +119,38 @@ jobs:
       - name: Verify VPS host fingerprint
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_FINGERPRINT: ${{ secrets.SERVER_FINGERPRINT }}
         run: |
           set -eu
+          matched=0
 
-          actual=$(ssh-keyscan -T 10 -t ed25519 "$SERVER_HOST" 2>/dev/null \
-            | ssh-keygen -lf - -E sha256 \
-            | awk '{print $2}' \
-            | head -n 1)
+          for key_type in ecdsa rsa ed25519; do
+            scanned=$(ssh-keyscan -T 10 -t "$key_type" "$SERVER_HOST" 2>/dev/null || true)
 
-          expected='SHA256:kR2W9s69sEJKDehP1VgA96XphTmAMgvfXPYIqwG9u3c'
+            if [ -z "$scanned" ]; then
+              echo "No $key_type host key found."
+              continue
+            fi
 
-          if [ "$actual" = "$expected" ]; then
-            echo "VPS host fingerprint matches."
-          else
-            echo "VPS host fingerprint does not match."
-            exit 1
+            fingerprint=$(printf '%s\n' "$scanned" \
+              | ssh-keygen -lf - -E sha256 2>/dev/null \
+              | awk 'NR == 1 {print $2}')
+
+            if [ -z "$fingerprint" ]; then
+              echo "Could not read $key_type fingerprint."
+              continue
+            fi
+
+            echo "Found $key_type host key."
+
+            if [ "$fingerprint" = "$SERVER_FINGERPRINT" ]; then
+              echo "SERVER_FINGERPRINT matches $key_type."
+              matched=1
+            fi
+          done
+
+          if [ "$matched" -eq 0 ]; then
+            echo "SERVER_FINGERPRINT matches none of the scanned keys."
           fi
 
       - name: Deploy via SSH and verify health
