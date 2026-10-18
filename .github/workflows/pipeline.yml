@@ -108,6 +108,8 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
 
   # JOB 3: Deploy lên VPS
+  
+  # JOB 3: Deploy lên VPS
   cd-deploy:
     name: CD - Deploy to VPS
     needs: package-docker
@@ -116,6 +118,15 @@ jobs:
     environment: production
 
     steps:
+      - name: Diagnose VPS host fingerprint
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          set -eu
+          echo "Checking SSH host key fingerprint from GitHub runner"
+          ssh-keyscan -T 10 -t ed25519 "$SERVER_HOST" 2>/dev/null \
+            | ssh-keygen -lf - -E sha256
+
       - name: Deploy via SSH and verify health
         uses: appleboy/ssh-action@v1.2.5
         env:
@@ -134,7 +145,6 @@ jobs:
             set -eu
 
             cd /opt/phat/docker-spring-lab
-
             git pull --ff-only origin master
 
             printf '%s' "$GHCR_READ_TOKEN" |
