@@ -1,0 +1,45 @@
+name: docker-spring-lab
+
+services:
+  database:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Missing MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-productdb}
+      MYSQL_USER: ${MYSQL_USER:-labuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Missing MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-net
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    image: ${IMAGE_NAME:?Missing IMAGE_NAME}:${IMAGE_TAG:-latest}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8043}:8080"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://database:3306/${MYSQL_DATABASE:-productdb}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-labuser}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:?Missing MYSQL_PASSWORD}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: unless-stopped
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    external: true
+    name: ${MYSQL_VOLUME_NAME:?Set MYSQL_VOLUME_NAME to the existing database volume}
